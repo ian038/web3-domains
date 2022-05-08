@@ -15,9 +15,6 @@ async function main() {
 
   const domainOwner = await domains.getAddress('abc')
   console.log('Domain owner is:', domainOwner)
-
-  txn = await domains.connect(randomPerson).setRecord('abc', 'https://ianphuadev.web.app/')
-  await txn.wait()
 }
 
 main()
