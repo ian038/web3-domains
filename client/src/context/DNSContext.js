@@ -11,10 +11,19 @@ export const DNSProvider = ({ children }) => {
     const [domain, setDomain] = useState('');
     const [record, setRecord] = useState('');
     const [network, setNetwork] = useState('');
+    const [editing, setEditing] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [mints, setMints] = useState([]);
 
     useEffect(() => {
         checkIfWalletIsConnected()
     }, [])
+
+    useEffect(() => {
+        if (network === 'Polygon Mumbai Testnet') {
+            fetchMints();
+        }
+    }, [currentAccount, network]);
 
     const checkIfWalletIsConnected = async () => {
         try {
@@ -60,9 +69,8 @@ export const DNSProvider = ({ children }) => {
         const price = domain.length === 3 ? '0.2' : domain.length === 4 ? '0.3' : '0.1';
         console.log("Minting domain", domain, "with price", price);
         try {
-            const { ethereum } = window;
-            if (ethereum) {
-                const provider = new ethers.providers.Web3Provider(ethereum);
+            if (window.ethereum) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
                 const signer = provider.getSigner();
                 const contract = new ethers.Contract(CONTRACT_ADDRESS, domainAbi.abi, signer);
 
@@ -76,6 +84,10 @@ export const DNSProvider = ({ children }) => {
                     await tx.wait();
 
                     console.log("Record set! https://mumbai.polygonscan.com/tx/" + tx.hash);
+
+                    setTimeout(() => {
+                        fetchMints();
+                    }, 2000)
 
                     setRecord('');
                     setDomain('');
@@ -100,7 +112,6 @@ export const DNSProvider = ({ children }) => {
                 });
             } catch (error) {
                 // This error code means that the chain we want has not been added to MetaMask
-                // In this case we ask the user to add it to their MetaMask
                 if (error.code === 4902) {
                     try {
                         await window.ethereum.request({
@@ -130,7 +141,82 @@ export const DNSProvider = ({ children }) => {
         }
     }
 
-    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain, network, switchNetwork }
+    const updateDomain = async () => {
+        if (!record || !domain) { return }
+        setLoading(true);
+        console.log("Updating domain", domain, "with record", record);
+        try {
+            if (window.ethereum) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, domainAbi.abi, signer);
+
+                let tx = await contract.setRecord(domain, record);
+                await tx.wait();
+                console.log("Record set https://mumbai.polygonscan.com/tx/" + tx.hash);
+
+                fetchMints();
+                setRecord('');
+                setDomain('');
+            }
+        } catch (error) {
+            alert('Error updating record')
+            console.log('Error updating record ', error);
+        }
+        setLoading(false);
+    }
+
+    const fetchMints = async () => {
+        try {
+            if (window.ethereum) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, domainAbi.abi, signer);
+                const names = await contract.getAllNames();
+
+                const mintRecords = await Promise.all(names.map(async (name) => {
+                    const mintRecord = await contract.records(name);
+                    const owner = await contract.domains(name);
+                    return {
+                        id: names.indexOf(name),
+                        name: name,
+                        record: mintRecord,
+                        owner: owner
+                    };
+                }));
+                console.log("MINTS FETCHED ", mintRecords);
+                setMints(mintRecords);
+            }
+        } catch (error) {
+            alert('Error fetching domains')
+            console.log('Fetch mints error ', error);
+        }
+    }
+
+    const editRecord = (name) => {
+        console.log("Editing record for", name);
+        setEditing(true);
+        setDomain(name);
+    }
+
+    const value = {
+        currentAccount,
+        connectWallet,
+        domain,
+        setDomain,
+        record,
+        setRecord,
+        mintDomain,
+        network,
+        switchNetwork,
+        updateDomain,
+        loading,
+        editing,
+        setEditing,
+        mints,
+        CONTRACT_ADDRESS,
+        editRecord
+    }
 
     return (
         <DNSContext.Provider value={value}>

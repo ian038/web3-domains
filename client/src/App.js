@@ -11,7 +11,24 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const tld = '.spartan'
 
 const App = () => {
-  const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain, network, switchNetwork } = useDNSContext()
+  const {
+    connectWallet,
+    currentAccount,
+    domain,
+    setDomain,
+    record,
+    setRecord,
+    mintDomain,
+    network,
+    switchNetwork,
+    updateDomain,
+    loading,
+    editing,
+    setEditing,
+    mints,
+    CONTRACT_ADDRESS,
+    editRecord
+  } = useDNSContext()
 
 
   const renderConnectWallet = () => (
@@ -50,13 +67,52 @@ const App = () => {
           placeholder='whats your personal website'
           onChange={e => setRecord(e.target.value)}
         />
-        <div className="button-container">
-          <button className='cta-button mint-button' onClick={mintDomain}>
+        {editing ? (
+          <div className="button-container">
+            <button className='cta-button mint-button' disabled={loading} onClick={updateDomain}>
+              Set record
+            </button>
+            <button className='cta-button mint-button' onClick={() => { setEditing(false); setDomain(''); setRecord('') }}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button className='cta-button mint-button' disabled={loading} onClick={mintDomain}>
             Mint
           </button>
-        </div>
+        )}
       </div>
     )
+  }
+
+  const renderMints = () => {
+    if (currentAccount && mints.length > 0) {
+      return (
+        <div className="mint-container">
+          <p className="subtitle"> Recently minted domains!</p>
+          <div className="mint-list">
+            {mints.map((mint, index) => {
+              return (
+                <div className="mint-item" key={index}>
+                  <div className='mint-row'>
+                    <a className="link" href={`https://testnets.opensea.io/assets/mumbai/${CONTRACT_ADDRESS}/${mint.id}`} target="_blank" rel="noopener noreferrer">
+                      <p className="underlined">{' '}{mint.name}{tld}{' '}</p>
+                    </a>
+                    {mint.owner.toLowerCase() === currentAccount.toLowerCase() ?
+                      <button className="edit-button" onClick={() => editRecord(mint.name)}>
+                        <img className="edit-icon" src="https://img.icons8.com/metro/26/000000/pencil.png" alt="Edit button" />
+                      </button>
+                      :
+                      null
+                    }
+                  </div>
+                  <p> {mint.record} </p>
+                </div>)
+            })}
+          </div>
+        </div>
+      );
+    }
   }
 
   return (
@@ -77,6 +133,7 @@ const App = () => {
 
         {!currentAccount && renderConnectWallet()}
         {currentAccount && renderInputForm()}
+        {mints && renderMints()}
 
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
