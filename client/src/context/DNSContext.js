@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import domainAbi from '../utils/Domains.json'
 
 const DNSContext = createContext()
+const CONTRACT_ADDRESS = '0x45a9dE0C437B622c56B4a66034baD219473cEE09'
 
 export const DNSProvider = ({ children }) => {
     const [currentAccount, setCurrentAccount] = useState(null)
+    const [domain, setDomain] = useState('');
+    const [record, setRecord] = useState('');
 
     useEffect(() => {
         checkIfWalletIsConnected()
@@ -36,7 +40,46 @@ export const DNSProvider = ({ children }) => {
         }
     }
 
-    const value = { currentAccount, connectWallet }
+    const mintDomain = async () => {
+        if (!domain) { return }
+        if (domain.length < 3) {
+            alert('Domain must be at least 3 characters long');
+            return;
+        }
+        const price = domain.length === 3 ? '0.2' : domain.length === 4 ? '0.3' : '0.1';
+        console.log("Minting domain", domain, "with price", price);
+        try {
+            const { ethereum } = window;
+            if (ethereum) {
+                const provider = new ethers.providers.Web3Provider(ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, domainAbi.abi, signer);
+
+                let tx = await contract.register(domain, { value: ethers.utils.parseEther(price) });
+                const receipt = await tx.wait();
+
+                if (receipt.status === 1) {
+                    console.log("Domain minted! https://mumbai.polygonscan.com/tx/" + tx.hash);
+
+                    tx = await contract.setRecord(domain, record);
+                    await tx.wait();
+
+                    console.log("Record set! https://mumbai.polygonscan.com/tx/" + tx.hash);
+
+                    setRecord('');
+                    setDomain('');
+                }
+                else {
+                    alert("Transaction failed to mint domain! Please try again");
+                }
+            }
+        } catch (error) {
+            alert('Error minting domain!')
+            console.log('Mint domain error: ', error);
+        }
+    }
+
+    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain }
 
     return (
         <DNSContext.Provider value={value}>
