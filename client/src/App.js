@@ -13,6 +13,51 @@ const tld = '.spartan'
 const App = () => {
   const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain, network } = useDNSContext()
 
+
+  const renderConnectWallet = () => (
+    <div className="connect-wallet-container">
+      <img src="https://media.giphy.com/media/vP5tCg09mctxuPwY1C/giphy-downsized-large.gif" alt="Spartan gif" />
+      <button onClick={connectWallet} className="cta-button connect-wallet-button">
+        Connect Wallet
+      </button>
+    </div>
+  )
+
+  const renderInputForm = () => {
+    if (network !== 'Polygon Mumbai Testnet') {
+      return (
+        <div className="connect-wallet-container">
+          <p>Please connect to the Polygon Mumbai Testnet</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="form-container">
+        <div className="first-row">
+          <input
+            type="text"
+            value={domain}
+            placeholder='domain'
+            onChange={e => setDomain(e.target.value)}
+          />
+          <p className='tld'> {tld} </p>
+        </div>
+        <input
+          type="text"
+          value={record}
+          placeholder='whats your personal website'
+          onChange={e => setRecord(e.target.value)}
+        />
+        <div className="button-container">
+          <button className='cta-button mint-button' onClick={mintDomain}>
+            Mint
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="App">
       <div className="container">
@@ -29,39 +74,8 @@ const App = () => {
           </header>
         </div>
 
-        {!currentAccount && (
-          <div className="connect-wallet-container">
-            <img src="https://media.giphy.com/media/vP5tCg09mctxuPwY1C/giphy-downsized-large.gif" alt="Spartan gif" />
-            <button onClick={connectWallet} className="cta-button connect-wallet-button">
-              Connect Wallet
-            </button>
-          </div>
-        )}
-
-        {currentAccount && (
-          <div className="form-container">
-            <div className="first-row">
-              <input
-                type="text"
-                value={domain}
-                placeholder='domain'
-                onChange={e => setDomain(e.target.value)}
-              />
-              <p className='tld'> {tld} </p>
-            </div>
-            <input
-              type="text"
-              value={record}
-              placeholder='whats your personal website'
-              onChange={e => setRecord(e.target.value)}
-            />
-            <div className="button-container">
-              <button className='cta-button mint-button' onClick={mintDomain}>
-                Mint
-              </button>
-            </div>
-          </div>
-        )}
+        {!currentAccount && renderConnectWallet()}
+        {currentAccount && renderInputForm()}
 
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
