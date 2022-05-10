@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { ethers } from 'ethers'
+import { networks } from '../utils/networks'
 import domainAbi from '../utils/Domains.json'
 
 const DNSContext = createContext()
@@ -9,6 +10,7 @@ export const DNSProvider = ({ children }) => {
     const [currentAccount, setCurrentAccount] = useState(null)
     const [domain, setDomain] = useState('');
     const [record, setRecord] = useState('');
+    const [network, setNetwork] = useState('');
 
     useEffect(() => {
         checkIfWalletIsConnected()
@@ -22,6 +24,15 @@ export const DNSProvider = ({ children }) => {
                 setCurrentAccount(accounts[0])
             } else {
                 alert('No accounts detected. Please connect your wallet.')
+            }
+
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            setNetwork(networks[chainId]);
+
+            window.ethereum.on('chainChanged', handleChainChanged);
+
+            function handleChainChanged(_chainId) {
+                window.location.reload();
             }
         } catch (error) {
             alert(error)
@@ -79,7 +90,7 @@ export const DNSProvider = ({ children }) => {
         }
     }
 
-    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain }
+    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain, network }
 
     return (
         <DNSContext.Provider value={value}>

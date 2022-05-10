@@ -1,6 +1,8 @@
 import React from 'react';
 import './styles/App.css';
 import twitterLogo from './assets/twitter-logo.svg';
+import polygonLogo from './assets/polygonlogo.png';
+import ethLogo from './assets/ethlogo.png';
 import { useDNSContext } from './context/DNSContext';
 
 // Constants
@@ -9,7 +11,7 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const tld = '.spartan'
 
 const App = () => {
-  const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain } = useDNSContext()
+  const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain, network } = useDNSContext()
 
   return (
     <div className="App">
@@ -20,12 +22,16 @@ const App = () => {
               <p className="title">⚔ Spartan Name Service</p>
               <p className="subtitle">Your personal API on the blockchain!</p>
             </div>
+            <div className="right">
+              <img alt="Network logo" className="logo" src={network.includes("Polygon") ? polygonLogo : ethLogo} />
+              {currentAccount ? <p> Wallet: {currentAccount.slice(0, 6)}...{currentAccount.slice(-4)} </p> : <p> Not connected </p>}
+            </div>
           </header>
         </div>
 
         {!currentAccount && (
           <div className="connect-wallet-container">
-            <img src="https://media.giphy.com/media/3ohhwytHcusSCXXOUg/giphy.gif" alt="Ninja gif" />
+            <img src="https://media.giphy.com/media/vP5tCg09mctxuPwY1C/giphy-downsized-large.gif" alt="Spartan gif" />
             <button onClick={connectWallet} className="cta-button connect-wallet-button">
               Connect Wallet
             </button>
