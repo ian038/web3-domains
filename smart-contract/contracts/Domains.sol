@@ -23,6 +23,11 @@ contract Domains is ERC721URIStorage {
     mapping(string => address) public domains;
     mapping(string => string) public records;
     mapping(string => bool) public isWebsiteRegistered;
+    mapping(uint256 => string) public names;
+
+    error Unauthorized();
+    error AlreadyRegistered();
+    error InvalidDomainName(string name);
 
     constructor(string memory _tld)
         payable
@@ -31,6 +36,16 @@ contract Domains is ERC721URIStorage {
         owner = payable(msg.sender);
         tld = _tld;
         console.log("%s name service deployed", _tld);
+    }
+
+    function getAllNames() public view returns (string[] memory) {
+        console.log("Getting all domain names from contract");
+        string[] memory allNames = new string[](_tokenIds.current());
+        for (uint256 i = 0; i < _tokenIds.current(); i++) {
+            allNames[i] = names[i];
+            console.log("Domain name for token %d is %s", i, allNames[i]);
+        }
+        return allNames;
     }
 
     function price(string calldata name) public pure returns (uint256) {
@@ -46,10 +61,8 @@ contract Domains is ERC721URIStorage {
     }
 
     function register(string calldata name) public payable {
-        require(
-            domains[name] == address(0),
-            "Oops! This domain is already registered."
-        );
+        if (domains[name] != address(0)) revert AlreadyRegistered();
+        if (!validDomainName(name)) revert InvalidDomainName(name);
         uint256 _price = price(name);
         require(msg.value >= _price, "Not enough Matic paid");
 
@@ -102,6 +115,11 @@ contract Domains is ERC721URIStorage {
         console.log("%s has registered a domain!", msg.sender);
 
         _tokenIds.increment();
+        names[newRecordId] = name;
+    }
+
+    function validDomainName(string calldata name) public pure returns (bool) {
+        return StringUtils.strlen(name) >= 3 && StringUtils.strlen(name) <= 10;
     }
 
     function getAddress(string calldata name) public view returns (address) {
@@ -109,14 +127,8 @@ contract Domains is ERC721URIStorage {
     }
 
     function setRecord(string calldata name, string calldata website) public {
-        require(
-            domains[name] == msg.sender,
-            "Oops! You do not have access to this function."
-        );
-        require(
-            !isWebsiteRegistered[website],
-            "Oops! This website is already in use."
-        );
+        if (domains[name] != msg.sender) revert Unauthorized();
+        if (isWebsiteRegistered[website]) revert AlreadyRegistered();
         records[name] = website;
         isWebsiteRegistered[website] = true;
         console.log("Website is mapped here:%s", website);

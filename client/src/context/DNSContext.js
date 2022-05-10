@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import domainAbi from '../utils/Domains.json'
 
 const DNSContext = createContext()
-const CONTRACT_ADDRESS = '0x45a9dE0C437B622c56B4a66034baD219473cEE09'
+const CONTRACT_ADDRESS = '0x67659BAab2807e7c8703E96b57a6c1d2Ced537dD'
 
 export const DNSProvider = ({ children }) => {
     const [currentAccount, setCurrentAccount] = useState(null)

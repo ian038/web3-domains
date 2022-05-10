@@ -7,7 +7,7 @@ async function main() {
   await domains.deployed();
   console.log("Domains deployed to:", domains.address);
 
-  let txn = await domains.register('joking', { value: hre.ethers.utils.parseEther('100') })
+  let txn = await domains.register('joking', { value: hre.ethers.utils.parseEther('0.1') })
   await txn.wait()
 
   txn = await domains.setRecord("joking", "https://joking.web.app/");
