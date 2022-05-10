@@ -1,25 +1,39 @@
 const hre = require("hardhat");
 
 async function main() {
+  const [owner, superCoder] = await hre.ethers.getSigners();
   const Domains = await hre.ethers.getContractFactory("Domains");
   const domains = await Domains.deploy('spartan');
-
   await domains.deployed();
   console.log("Domains deployed to:", domains.address);
 
-  let txn = await domains.register('silent', { value: hre.ethers.utils.parseEther('0.2') })
+  let txn = await domains.register('joking', { value: hre.ethers.utils.parseEther('100') })
   await txn.wait()
-  console.log("Minted domain silent.spartan");
 
-  txn = await domains.setRecord("silent", "https://ianphuadev.web.app/");
+  txn = await domains.setRecord("joking", "https://joking.web.app/");
   await txn.wait();
-  console.log("Set record for silent.spartan");
-
-  const address = await domains.getAddress("silent");
-  console.log("Owner of domain silent:", address);
 
   const balance = await hre.ethers.provider.getBalance(domains.address);
   console.log("Contract balance:", hre.ethers.utils.formatEther(balance));
+
+  try {
+    txn = await domains.connect(superCoder).withdraw();
+    await txn.wait();
+  } catch (error) {
+    console.log("Could not rob contract");
+  }
+
+  let ownerBalance = await hre.ethers.provider.getBalance(owner.address);
+  console.log("Balance of owner before withdrawal:", hre.ethers.utils.formatEther(ownerBalance));
+
+  txn = await domains.connect(owner).withdraw();
+  await txn.wait();
+
+  const contractBalance = await hre.ethers.provider.getBalance(domains.address);
+  ownerBalance = await hre.ethers.provider.getBalance(owner.address);
+
+  console.log("Contract balance after withdrawal:", hre.ethers.utils.formatEther(contractBalance));
+  console.log("Balance of owner after withdrawal:", hre.ethers.utils.formatEther(ownerBalance));
 }
 
 main()
