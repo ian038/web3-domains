@@ -90,7 +90,47 @@ export const DNSProvider = ({ children }) => {
         }
     }
 
-    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain, network }
+    const switchNetwork = async () => {
+        if (window.ethereum) {
+            try {
+                // Switch to the Mumbai testnet
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x13881' }]
+                });
+            } catch (error) {
+                // This error code means that the chain we want has not been added to MetaMask
+                // In this case we ask the user to add it to their MetaMask
+                if (error.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [
+                                {
+                                    chainId: '0x13881',
+                                    chainName: 'Polygon Mumbai Testnet',
+                                    rpcUrls: ['https://rpc-mumbai.maticvigil.com/'],
+                                    nativeCurrency: {
+                                        name: "Mumbai Matic",
+                                        symbol: "MATIC",
+                                        decimals: 18
+                                    },
+                                    blockExplorerUrls: ["https://mumbai.polygonscan.com/"]
+                                },
+                            ],
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+                console.log(error);
+            }
+        } else {
+            alert('MetaMask is not installed. Please install it to use this app: https://metamask.io/download.html');
+        }
+    }
+
+    const value = { currentAccount, connectWallet, domain, setDomain, record, setRecord, mintDomain, network, switchNetwork }
 
     return (
         <DNSContext.Provider value={value}>

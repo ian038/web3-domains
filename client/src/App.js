@@ -11,7 +11,7 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const tld = '.spartan'
 
 const App = () => {
-  const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain, network } = useDNSContext()
+  const { connectWallet, currentAccount, domain, setDomain, record, setRecord, mintDomain, network, switchNetwork } = useDNSContext()
 
 
   const renderConnectWallet = () => (
@@ -28,6 +28,7 @@ const App = () => {
       return (
         <div className="connect-wallet-container">
           <p>Please connect to the Polygon Mumbai Testnet</p>
+          <button className='cta-button mint-button' onClick={switchNetwork}>Click here to switch</button>
         </div>
       );
     }
